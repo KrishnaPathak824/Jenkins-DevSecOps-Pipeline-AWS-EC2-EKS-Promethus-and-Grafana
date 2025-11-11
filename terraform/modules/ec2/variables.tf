@@ -7,7 +7,7 @@ variable "ami_id" {
 variable "instance_type" {
     description = "The instance type for the Jenkins Master"
     type        = string
-    default     = "c7i-flex.large"
+    default     = "m7i-flex.large"
 }
 
 variable "key_name" {

@@ -1,0 +1,40 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: prod
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: backend1-config
+  namespace: prod
+data:
+  PORT: "3000"
+  DB_CLIENT: pg
+  NODE_ENV: local
+  CLIENT_URL: http://krishna-app.com
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: backend2-config
+  namespace: prod
+data:
+  PORT: "3001"
+  DB_CLIENT: pg
+  NODE_ENV: local
+  CLIENT_URL: http://krishna-app.com
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: frontend-config
+  namespace: prod
+data:
+  VITE_CLERK_PUBLISHABLE_KEY: pk_test_cmVndWxhci1zYXR5ci0zMS5jbGVyay5hY2NvdW50cy5kZXYk
+  VITE_API_URL_1: http://krishna-app.com
+  VITE_API_URL_2: http://krishna-app.com
+---
+

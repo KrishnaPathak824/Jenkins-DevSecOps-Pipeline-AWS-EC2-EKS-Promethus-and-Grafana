@@ -1,0 +1,48 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: myingress
+  namespace: prod
+  # annotations:
+  #   nginx.ingress.kubernetes.io/ssl-redirect: "true"
+spec:
+  ingressClassName: nginx
+  # tls:
+  #   - hosts:
+  #       - krishna-app.com
+  #     secretName: self-signed-tls
+  rules:
+    - host: krishna-app.com
+      http:
+        paths:
+          - path: /api/users
+            pathType: Prefix
+            backend:
+              service:
+                name: backend1-service
+                port:
+                  number: 80
+
+          - path: /api/blogs
+            pathType: Prefix
+            backend:
+              service:
+                name: backend2-service
+                port:
+                  number: 80
+
+          - path: /api/comments
+            pathType: Prefix
+            backend:
+              service:
+                name: backend2-service
+                port:
+                  number: 80
+
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: frontend-service
+                port:
+                  number: 80

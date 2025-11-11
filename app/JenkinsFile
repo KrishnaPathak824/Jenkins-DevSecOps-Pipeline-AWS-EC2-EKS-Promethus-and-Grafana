@@ -40,7 +40,7 @@ pipeline {
         stage('SonarQube Code Analysis Scan') {
             steps {
                 script{
-                    sonarqube("SonarQube","blog-app","blog-app-key")
+                    sonarqube("Sonarqube","blog-app","blog-app")
                 }
             }
         }
@@ -58,14 +58,14 @@ pipeline {
                 stage('Frontend Image Build') {
                     steps {
                         script{
-                            dockerBuild('blog-app-frontend','./frontend')
+                            dockerBuild('blog-app-frontend','app/code/frontend')
                         }
                     }
                 }
                 stage('Backend1 Image Build') {
                     steps {
                         script{
-                            dockerBuild('blog-app-backend1','./backend1')
+                            dockerBuild('blog-app-backend1','app/code/backend1')
                         }
                     }
                 }

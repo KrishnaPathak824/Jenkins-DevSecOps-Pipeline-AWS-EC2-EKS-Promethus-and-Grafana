@@ -1,0 +1,76 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend1
+  namespace: prod
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: backend1
+  template:
+    metadata:
+      labels:
+        app: backend1
+    spec:
+      containers:
+        - name: backend1
+          image: jhinga/backend1:latest
+          ports:
+            - containerPort: 3000
+          envFrom:
+            - configMapRef:
+                name: backend1-config
+            - secretRef:
+                name: backend-secret
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend2
+  namespace: prod
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: backend2
+  template:
+    metadata:
+      labels:
+        app: backend2
+    spec:
+      containers:
+        - name: backend2
+          image: jhinga/backend2:latest
+          ports:
+            - containerPort: 3001
+          envFrom:
+            - configMapRef:
+                name: backend2-config
+            - secretRef:
+                name: backend-secret
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend-deployment
+  namespace: prod
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+    spec:
+      containers:
+        - name: frontend
+          image: jhinga/frontend:v69.69.69
+          ports:
+            - containerPort: 80
+          imagePullPolicy: Always
+          envFrom:
+            - configMapRef:
+                name: frontend-config
