@@ -33,17 +33,17 @@ pipeline {
             steps {
                 dir('app/frontend'){
                     script{
-                        sh 'yarn install'
+                        sh 'yarn install --frozen-lockfile'
                     }
                 }
                 dir('app/backend1'){
                     script{
-                        sh 'yarn install'
+                        sh 'yarn install --frozen-lockfile'
                     }
                 }
                 dir('app/backend2'){
                     script{
-                        sh 'yarn install'
+                        sh 'yarn install --frozen-lockfile'
                     }
                 }
                 
