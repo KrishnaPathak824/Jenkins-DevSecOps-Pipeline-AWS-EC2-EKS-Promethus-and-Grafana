@@ -16,7 +16,7 @@ pipeline {
         stage('Cloning the repo') {
             steps {
                 script{
-                    clone("https://github.com/KrishnaPathak824/Blog-App.git","main")
+                    clone("https://github.com/KrishnaPathak824/Jenkins-DevSecOps-Pipeline-AWS-EC2-EKS-Promethus-and-Grafana.git","main")
                 }
             }
         }
