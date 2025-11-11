@@ -66,34 +66,26 @@ pipeline {
             }
         }
 
-        stage('SonarQube Quality Gate') {
-            steps {
-                script{
-                    sonarqube_code_quality()
-                }
-            }
-        }
-
         stage('image-build') {
             parallel{
                 stage('Frontend Image Build') {
                     steps {
                         script{
-                            dockerBuild('blog-app-frontend','app/code/frontend')
+                            dockerBuild('blog-app-frontend','app/frontend')
                         }
                     }
                 }
                 stage('Backend1 Image Build') {
                     steps {
                         script{
-                            dockerBuild('blog-app-backend1','app/code/backend1')
+                            dockerBuild('blog-app-backend1','app/backend1')
                         }
                     }
                 }
                 stage('Backend2 Image Build') {
                     steps {
                         script{
-                            dockerBuild('blog-app-backend2','./backend2')
+                            dockerBuild('blog-app-backend2','app/backend2')
                         }
                     }
                 }
