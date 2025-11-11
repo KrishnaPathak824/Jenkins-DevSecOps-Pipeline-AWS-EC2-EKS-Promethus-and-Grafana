@@ -31,12 +31,21 @@ pipeline {
 
         stage('Install Dependencies') {
             steps {
-                script {
-                    // Install dependencies for all relevant directories
-                    sh 'cd app/frontend/ && npm install'
-                    sh 'cd app/backend1/ && npm install'
-                    sh 'cd app/backend2/ && npm install'
-                }   
+                dir('app/backend1'){
+                    script{
+                        sh 'yarn install'
+                    }
+                }
+                dir('app/backend2'){
+                    script{
+                        sh 'yarn install'
+                    }
+                }
+                dir('app/frontend'){
+                    script{
+                        sh 'yarn install'
+                    }
+                }
             }
         }
 
