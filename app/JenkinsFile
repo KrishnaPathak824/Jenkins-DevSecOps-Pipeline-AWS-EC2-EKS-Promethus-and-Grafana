@@ -29,6 +29,18 @@ pipeline {
             }
         }
 
+        stage('Install Dependencies') {
+            steps {
+                script {
+                    // Install dependencies for all relevant directories
+                    sh 'cd code/backend1 && npm install'
+                    sh 'cd code/backend2 && npm install'
+                    sh 'cd code/frontend && npm install'
+                }
+            }
+        }
+
+
         stage('Owasp: Dependency Check') {
             steps {
                 script{
