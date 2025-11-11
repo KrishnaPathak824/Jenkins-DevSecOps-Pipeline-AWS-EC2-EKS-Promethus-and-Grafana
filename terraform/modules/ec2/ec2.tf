@@ -162,3 +162,4 @@ resource "aws_instance" "jenkins-master" {
 
               EOF
 }
+

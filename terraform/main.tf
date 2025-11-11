@@ -52,3 +52,12 @@ module "ec2" {
   vpc_id    = aws_vpc.main.id
   subnet_id = aws_subnet.main[0].id
 }
+
+module "eks" {
+  source = "./modules/eks"
+
+  cluster_name               = "my-eks-cluster"
+  vpc_id                     = aws_vpc.main.id
+  subnet_ids                 = aws_subnet.main[*].id
+}
+
