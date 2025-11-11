@@ -66,11 +66,13 @@ pipeline {
             }
         }
 
-        stage('SonarQube Quality Gate') {
+        stage('SonarQube Analysis') {
             steps {
-                script{
-                    sonarqube_code_quality()
-                }
+                script {
+                    withSonarQubeEnv("${SonarQubeAPI}"){
+                    sh "$SONAR_HOME/bin/sonar-scanner -Dsonar.projectName=${Project} -Dsonar.projectKey=${ProjectKey} -x"
+                    }
+                }   
             }
         }
 
