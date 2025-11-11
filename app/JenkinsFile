@@ -1,0 +1,109 @@
+@Library('shared-library') _
+pipeline {
+    agent any
+
+    environment {
+        SONAR_HOME = tool name: 'SonarQube'
+    }
+
+    stages {
+        stage('Workspace CleanUp') {
+            steps {
+                cleanWs()
+            }
+        }
+    
+        stage('Cloning the repo') {
+            steps {
+                script{
+                    clone("https://github.com/KrishnaPathak824/Blog-App.git","main")
+                }
+            }
+        }
+
+        stage('Trivy Filesystem Scan') {
+            steps {
+                script{
+                    trivy()
+                }
+            }
+        }
+
+        stage('Owasp: Dependency Check') {
+            steps {
+                script{
+                    owaspDependencyCheck()
+                }
+            }
+        }
+
+        stage('SonarQube Code Analysis Scan') {
+            steps {
+                script{
+                    sonarqube("SonarQube","blog-app","blog-app-key")
+                }
+            }
+        }
+
+        stage('SonarQube Quality Gate') {
+            steps {
+                script{
+                    sonarqube_code_quality()
+                }
+            }
+        }
+
+        stage('image-build') {
+            parallel{
+                stage('Frontend Image Build') {
+                    steps {
+                        script{
+                            dockerBuild('blog-app-frontend','./frontend')
+                        }
+                    }
+                }
+                stage('Backend1 Image Build') {
+                    steps {
+                        script{
+                            dockerBuild('blog-app-backend1','./backend1')
+                        }
+                    }
+                }
+                stage('Backend2 Image Build') {
+                    steps {
+                        script{
+                            dockerBuild('blog-app-backend2','./backend2')
+                        }
+                    }
+                }
+            }
+        }
+
+        stage("Push to DockerHub")
+        {
+            parallel{
+                stage('Frontend Push') {
+                    steps {
+                        script{
+                            dockerTagAndPush('blog-app-frontend')
+                        }
+                    }
+                }
+                stage('Backend1 Push') {
+                    steps {
+                        script{
+                            dockerTagAndPush('blog-app-backend1')
+                        }
+                    }
+                }
+                stage('Backend2 Push') {
+                    steps {
+                        script{
+                            dockerTagAndPush('blog-app-backend2')
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
