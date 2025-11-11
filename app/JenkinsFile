@@ -71,21 +71,21 @@ pipeline {
                 stage('Frontend Image Build') {
                     steps {
                         script{
-                            dockerBuild('blog-app-frontend','app/frontend')
+                            dockerBuild('app/frontend','blog-app-frontend')
                         }
                     }
                 }
                 stage('Backend1 Image Build') {
                     steps {
                         script{
-                            dockerBuild('blog-app-backend1','app/backend1')
+                            dockerBuild('app/backend1','blog-app-backend1')
                         }
                     }
                 }
                 stage('Backend2 Image Build') {
                     steps {
                         script{
-                            dockerBuild('blog-app-backend2','app/backend2')
+                            dockerBuild('app/backend2','blog-app-backend2')
                         }
                     }
                 }
