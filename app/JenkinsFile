@@ -8,6 +8,7 @@ pipeline {
 
     environment {
         SONAR_HOME = tool name: 'Sonarqube'
+        GITHUB_TOKEN = credentials('github')
     }
 
     stages {
@@ -21,6 +22,16 @@ pipeline {
             steps {
                 script{
                     clone("https://github.com/KrishnaPathak824/Jenkins-DevSecOps-Pipeline-AWS-EC2-EKS-Promethus-and-Grafana.git","main")
+                }
+            }
+        }
+
+        stage('Setup Semantic Release') {
+            steps {
+                script{
+                    sh '''
+                        npm install -g semantic-release @semantic-release/changelog @semantic-release/git
+                    '''
                 }
             }
         }
@@ -96,31 +107,89 @@ pipeline {
             }
         }
 
+        stage('Generate Release Version') {
+            steps {
+                script{
+                    sh '''
+                        # Run semantic-release in dry-run mode to get the next version
+                        NEXT_VERSION=$(npx semantic-release --dry-run 2>&1 | grep -oP 'The next release version is \\K[0-9]+\\.[0-9]+\\.[0-9]+' || echo "0.0.0")
+                        
+                        if [ "$NEXT_VERSION" = "0.0.0" ]; then
+                            # If no release, use current tag or default
+                            CURRENT_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+                            NEXT_VERSION=${CURRENT_TAG#v}
+                            echo "No changes detected, keeping version: $NEXT_VERSION"
+                        fi
+                        
+                        echo "VERSION=$NEXT_VERSION" > version.txt
+                        cat version.txt
+                    '''
+                }
+            }
+        }
+
+        stage('Tag and Release') {
+            when {
+                branch 'main'
+            }
+            steps {
+                script{
+                    sh '''
+                        source version.txt
+                        
+                        # Check if new version was created
+                        if ! git rev-parse "v${VERSION}" >/dev/null 2>&1; then
+                            echo "Creating tag v${VERSION}"
+                            git tag -a "v${VERSION}" -m "Release v${VERSION}" || echo "Tag already exists"
+                            git push origin "v${VERSION}" || echo "Push failed"
+                        else
+                            echo "Tag v${VERSION} already exists"
+                        fi
+                    '''
+                }
+            }
+        }
+
         stage("Push to DockerHub")
         {
             parallel{
                 stage('Frontend Push') {
                     steps {
                         script{
-                            dockerTagAndPush('blog-app-frontend')
+                            sh '''
+                            source version.txt
+                            dockerTagAndPush('blog-app-frontend',${VERSION})
+                            '''
                         }
                     }
                 }
                 stage('Backend1 Push') {
                     steps {
                         script{
-                            dockerTagAndPush('blog-app-backend1')
+                            sh '''
+                            source version.txt
+                            dockerTagAndPush('blog-app-backend1',${VERSION})
+                            '''
                         }
                     }
                 }
                 stage('Backend2 Push') {
                     steps {
                         script{
-                            dockerTagAndPush('blog-app-backend2')
+                            sh '''
+                            source version.txt
+                            dockerTagAndPush('blog-app-backend2',${VERSION})
+                            '''
                         }
                     }
                 }
             }
+        }
+    }
+    post{
+        success{
+            archiveArtifacts artifacts: '**/target/*.jar', followSymlinks: false
+            buildjob: 'Cluster-Deployement-ArgoCD'
         }
     }
 }
