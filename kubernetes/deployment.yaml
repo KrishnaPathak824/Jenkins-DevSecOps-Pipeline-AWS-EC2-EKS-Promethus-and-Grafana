@@ -67,7 +67,7 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: blog-app-frontend:latest
+          image: jhinga/blog-app-frontend:latest
           ports:
             - containerPort: 80
           imagePullPolicy: Always
