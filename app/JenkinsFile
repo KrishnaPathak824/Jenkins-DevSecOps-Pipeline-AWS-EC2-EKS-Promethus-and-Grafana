@@ -2,6 +2,10 @@
 pipeline {
     agent any
 
+    tool{
+        nodejs 'NodeJS-18'
+    }
+
     environment {
         SONAR_HOME = tool name: 'Sonarqube'
     }
@@ -33,17 +37,17 @@ pipeline {
             steps {
                 dir('app/frontend'){
                     script{
-                        sh '/usr/bin/yarn install --frozen-lockfile'
+                        sh 'yarn install --frozen-lockfile'
                     }
                 }
                 dir('app/backend1'){
                     script{
-                        sh '/usr/bin/yarn install --frozen-lockfile'
+                        sh 'yarn install --frozen-lockfile'
                     }
                 }
                 dir('app/backend2'){
                     script{
-                        sh '/usr/bin/yarn install --frozen-lockfile'
+                        sh 'yarn install --frozen-lockfile'
                     }
                 }
                 
