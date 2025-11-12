@@ -9,6 +9,12 @@ import { errorHandler } from './middlewares/errorHandler';
 
 import { requestLogger } from './middlewares/requestLogger';
 
+const corsOptions = {
+    origin: process.env.CLIENT_URL || 'http://localhost:3000',
+    optionsSuccessStatus: 200,
+    credentials: true,
+};
+
 
 dotenv.config();
 
@@ -16,7 +22,7 @@ const app: Application = express();
 
 app.use(express.json());
 
-app.use(cors());
+app.use(cors(corsOptions));
 
 app.use(requestLogger);
 app.use(appRouter);

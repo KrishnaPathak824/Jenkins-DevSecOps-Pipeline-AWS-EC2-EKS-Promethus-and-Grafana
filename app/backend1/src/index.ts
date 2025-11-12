@@ -11,10 +11,16 @@ import { requestLogger } from './middlewares/requestLogger';
 
 dotenv.config();
 
+const corsOptions = {
+    origin: process.env.CLIENT_URL || 'http://localhost:3000',
+    optionsSuccessStatus: 200,
+    credentials: true,
+};
+
 const app: Application = express();
 
 app.use(express.json());
-app.use(cors());
+app.use(cors(corsOptions));
 
 // Clerk middleware: attaches req.auth to all requests
 app.use(ClerkExpressWithAuth());

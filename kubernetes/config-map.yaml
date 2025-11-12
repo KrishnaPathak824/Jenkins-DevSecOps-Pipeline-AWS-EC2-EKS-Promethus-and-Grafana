@@ -34,7 +34,6 @@ metadata:
   namespace: dev
 data:
   VITE_CLERK_PUBLISHABLE_KEY: pk_test_cmVndWxhci1zYXR5ci0zMS5jbGVyay5hY2NvdW50cy5kZXYk
-  VITE_API_URL_1: http://krishna-app.com
-  VITE_API_URL_2: http://krishna-app.com
+  VITE_API_URL: http://krishna-app.com
 ---
 
