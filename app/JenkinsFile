@@ -129,14 +129,11 @@ pipeline {
         }
 
         stage('Tag and Release') {
-            when {
-                branch 'main'
-            }
             steps {
                 script{
-                    sh '''
-                        source version.txt
-                        
+                    sh '''#!/bin/bash
+                        VERSION=$(cat version.txt)
+                    
                         # Check if new version was created
                         if ! git rev-parse "v${VERSION}" >/dev/null 2>&1; then
                             echo "Creating tag v${VERSION}"
@@ -156,8 +153,8 @@ pipeline {
                 stage('Frontend Push') {
                     steps {
                         script{
-                            sh '''
-                            source version.txt
+                            sh '''#!/bin/bash
+                            VERSION=$(cat version.txt)
                             dockerTagAndPush('blog-app-frontend',${VERSION})
                             '''
                         }
@@ -166,8 +163,8 @@ pipeline {
                 stage('Backend1 Push') {
                     steps {
                         script{
-                            sh '''
-                            source version.txt
+                            sh '''#!/bin/bash
+                            VERSION=$(cat version.txt)
                             dockerTagAndPush('blog-app-backend1',${VERSION})
                             '''
                         }
@@ -176,14 +173,23 @@ pipeline {
                 stage('Backend2 Push') {
                     steps {
                         script{
-                            sh '''
-                            source version.txt
+                            sh '''#!/bin/bash
+                            VERSION=$(cat version.txt)
                             dockerTagAndPush('blog-app-backend2',${VERSION})
                             '''
                         }
                     }
                 }
             }
+        }
+    }
+    post{
+        success{
+            archiveArtifacts artifacts: '**/target/*.jar', followSymlinks: false
+            echo "Build and deployment successful!"
+        }
+        failure{
+            echo "Pipeline failed. Check logs for details."
         }
     }
 }
