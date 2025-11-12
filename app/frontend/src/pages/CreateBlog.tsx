@@ -25,8 +25,8 @@ import { Link } from "react-router-dom";
 import { marked } from "marked";
 import { openPreview } from "../util";
 
-const USER_API = `${VITE_API_URL}:3000/api/users`;
-const BLOG_API = `${VITE_API_URL}:3001/api/blogs`;
+const USER_API = `${VITE_API_URL}/api/users`;
+const BLOG_API = `${VITE_API_URL}/api/blogs`;
 
 const generatePreview = async (arg: string) => {
 //     const parser = new DOMParser();

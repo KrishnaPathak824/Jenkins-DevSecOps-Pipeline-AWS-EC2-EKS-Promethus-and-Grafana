@@ -27,7 +27,7 @@ import axios from "axios";
 import { marked } from "marked";
 const VITE_API_URL = import.meta.env.VITE_API_URL; 
 
-const COMMENTS_API = `${VITE_API_URL}:3001/api/comments`;
+const COMMENTS_API = `${VITE_API_URL}/api/comments`;
 
 const SingleBlog: React.FC = () => {
     const { id } = useParams<{ id: string }>();
