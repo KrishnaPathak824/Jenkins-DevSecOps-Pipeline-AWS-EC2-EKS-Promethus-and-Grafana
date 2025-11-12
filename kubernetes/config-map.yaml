@@ -24,7 +24,7 @@ data:
   PORT: "3001"
   DB_CLIENT: pg
   NODE_ENV: local
-  CLIENT_URL: http://krishna-app.com
+  CLIENT_URL: https://krishna-app.com
 
 ---
 apiVersion: v1
@@ -34,6 +34,6 @@ metadata:
   namespace: dev
 data:
   VITE_CLERK_PUBLISHABLE_KEY: pk_test_cmVndWxhci1zYXR5ci0zMS5jbGVyay5hY2NvdW50cy5kZXYk
-  VITE_API_URL: http://krishna-app.com
+  VITE_API_URL: https://krishna-app.com
 ---
 
