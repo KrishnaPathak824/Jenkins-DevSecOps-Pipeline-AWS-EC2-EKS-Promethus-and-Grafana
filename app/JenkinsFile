@@ -172,7 +172,7 @@ pipeline {
                     docker login -u $dockeruser -p $dockerpass
                     docker image tag blog-app-frontend $dockeruser/blog-app-frontend:${VERSION}
                     docker image tag blog-app-frontend $dockeruser/blog-app-frontend:latest
-                    docker push $dockeruser/blog-app-frontend:${VERSION}
+                    docker push $dockeruser/blog-app-frontend:$VERSION
                     docker push $dockeruser/blog-app-frontend:latest
                     '''
                     }
@@ -189,7 +189,7 @@ pipeline {
                     docker login -u $dockeruser -p $dockerpass
                     docker image tag blog-app-backend1 $dockeruser/blog-app-backend1:${VERSION}
                     docker image tag blog-app-backend1 $dockeruser/blog-app-backend1:latest
-                    docker push $dockeruser/blog-app-backend1:${VERSION}
+                    docker push $dockeruser/blog-app-backend1:$VERSION
                     docker push $dockeruser/blog-app-backend1:latest
                     '''
                     }
@@ -206,7 +206,7 @@ pipeline {
                     docker login -u $dockeruser -p $dockerpass
                     docker image tag blog-app-backend2 $dockeruser/blog-app-backend2:${VERSION}
                     docker image tag blog-app-backend2 $dockeruser/blog-app-backend2:latest
-                    docker push $dockeruser/blog-app-backend2:${VERSION}
+                    docker push $dockeruser/blog-app-backend2:$VERSION
                     docker push $dockeruser/blog-app-backend2:latest
                     '''
                     }
