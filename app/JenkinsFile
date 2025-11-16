@@ -134,9 +134,18 @@ pipeline {
         stage('Tag and Release') {
             steps {
                 script{
+                    withCredentials([string(credentialsId: 'my-secret-token', variable: 'GITHUB_TOKEN')]) {
                     sh '''#!/bin/bash
+                        # Configure git
+                        git config --global user.email "jenkins@example.com"
+                        git config --global user.name "Jenkins CI"
+                            
                         VERSION=$(cat version.txt)
-                    
+                            
+                        # Set git remote with credentials
+                        git remote set-url origin https://KrishnaPathak824:${GITHUB_TOKEN}@github.com/KrishnaPathak824/Jenkins-DevSecOps-Pipeline-AWS-EC2-EKS-Promethus-and-Grafana.git
+                            
+    
                         # Check if new version was created
                         if ! git rev-parse "v${VERSION}" >/dev/null 2>&1; then
                             echo "Creating tag v${VERSION}"
@@ -145,7 +154,8 @@ pipeline {
                         else
                             echo "Tag v${VERSION} already exists"
                         fi
-                    '''
+                   '''
+                   }
                 }
             }
         }
