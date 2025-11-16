@@ -48,7 +48,10 @@ pipeline {
             steps {
                 dir('app/frontend'){
                     script{
-                        sh 'yarn install --frozen-lockfile'
+                        sh '''
+                        npm install -g yarn
+                        yarn install --frozen-lockfile
+                        '''
                     }
                 }
                 dir('app/backend1'){

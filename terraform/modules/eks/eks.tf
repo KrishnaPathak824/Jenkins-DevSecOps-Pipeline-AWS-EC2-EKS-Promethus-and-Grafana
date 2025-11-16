@@ -162,3 +162,6 @@ resource "aws_eks_access_policy_association" "krishna_terraform" {
     type = "cluster"
   }
 }
+
+
+

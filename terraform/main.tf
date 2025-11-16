@@ -48,6 +48,9 @@ resource "aws_route_table_association" "a" {
 module "ec2" {
   source = "./modules/ec2"
 
+  cluster_arn = module.eks.cluster_resource_arn
+  cluster_name = module.eks.cluster_name
+
   vpc_id    = aws_vpc.main.id
   subnet_id = aws_subnet.main[0].id
 }

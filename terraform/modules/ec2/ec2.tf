@@ -110,6 +110,7 @@ resource "aws_instance" "jenkins-master" {
   subnet_id                   = var.subnet_id
   vpc_security_group_ids      = [aws_security_group.jenkins-sg.id]
   associate_public_ip_address = true
+  iam_instance_profile        = aws_iam_instance_profile.ec2_eks_access_instance_profile.name
 
   root_block_device {
     volume_size = 30
@@ -163,3 +164,71 @@ resource "aws_instance" "jenkins-master" {
               EOF
 }
 
+resource "aws_iam_role" "ec2_eks_access_role" {
+    name = "ec2-eks-access-role"
+
+    assume_role_policy = jsonencode({
+        Version = "2012-10-17"
+        Statement = [
+            {
+                Effect = "Allow"
+                Principal = {
+                    Service = "ec2.amazonaws.com"
+                }
+                Action = "sts:AssumeRole"
+            },
+        ]
+    })
+}
+
+resource "aws_iam_policy" "ec2_eks_access_policy" {
+    name        = "ec2-eks-access-policy"
+    description = "Policy to allow EC2 instances to manage EKS cluster"
+
+    policy = jsonencode({
+        Version = "2012-10-17"
+        Statement = [
+            {
+                Effect = "Allow"
+                Action = [
+                    "eks:DescribeCluster",
+                    "eks:ListClusters",
+                    "eks:AccessKubernetesApi"
+                ]
+                Resource = var.cluster_arn
+            },
+            {
+                Effect = "Allow"
+                Action = [
+                    "sts:GetCallerIdentity"
+                ]
+                Resource = "*"
+            }
+        ]
+    })
+}
+
+resource "aws_iam_role_policy_attachment" "ec2_eks_access_role_attachment" {
+    role       = aws_iam_role.ec2_eks_access_role.name
+    policy_arn = aws_iam_policy.ec2_eks_access_policy.arn
+}
+
+resource "aws_iam_instance_profile" "ec2_eks_access_instance_profile" {
+    name = "ec2-eks-access-instance-profile"
+    role = aws_iam_role.ec2_eks_access_role.name
+}
+
+resource "aws_eks_access_entry" "jenkins" {
+  cluster_name      = var.cluster_name
+  principal_arn     = aws_iam_role.ec2_eks_access_role.arn
+  type              = "STANDARD"
+}
+
+resource "aws_eks_access_policy_association" "jenkins" {
+  cluster_name       = var.cluster_name
+  policy_arn         = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy" 
+  principal_arn      = aws_eks_access_entry.jenkins.principal_arn
+  access_scope {
+    type = "cluster"
+  }
+}
