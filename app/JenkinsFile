@@ -166,7 +166,16 @@ pipeline {
             steps {
                 script{
                     def VERSION = readFile('version.txt').trim()
-                    dockerTagAndPush('blog-app-frontend', VERSION)
+                    withCredentials([usernamePassword('credentialsId':"docker-cred",passwordVariable:"dockerpass",usernameVariable:"dockeruser")]){
+                    sh '''
+                    export VERSION=''' + VERSION + '''
+                    docker login -u $dockeruser -p $dockerpass
+                    docker image tag blog-app-frontend $dockeruser/blog-app-frontend:${VERSION}
+                    docker image tag blog-app-frontend $dockeruser/blog-app-frontend:latest
+                    docker push $dockeruser/blog-app-frontend:${VERSION}
+                    docker push $dockeruser/blog-app-frontend:latest
+                    '''
+                    }
                 }
             }
         }
@@ -174,7 +183,16 @@ pipeline {
             steps {
                 script{
                     def VERSION = readFile('version.txt').trim()
-                    dockerTagAndPush('blog-app-backend1', VERSION)
+                    withCredentials([usernamePassword('credentialsId':"docker-cred",passwordVariable:"dockerpass",usernameVariable:"dockeruser")]){
+                    sh '''
+                    export VERSION=''' + VERSION + '''
+                    docker login -u $dockeruser -p $dockerpass
+                    docker image tag blog-app-backend1 $dockeruser/blog-app-backend1:${VERSION}
+                    docker image tag blog-app-backend1 $dockeruser/blog-app-backend1:latest
+                    docker push $dockeruser/blog-app-backend1:${VERSION}
+                    docker push $dockeruser/blog-app-backend1:latest
+                    '''
+                    }
                 }
             }
         }
@@ -182,20 +200,22 @@ pipeline {
             steps {
                 script{
                     def VERSION = readFile('version.txt').trim()
-                    dockerTagAndPush('blog-app-backend2', VERSION)
+                    withCredentials([usernamePassword('credentialsId':"docker-cred",passwordVariable:"dockerpass",usernameVariable:"dockeruser")]){
+                    sh '''
+                    export VERSION=''' + VERSION + '''
+                    docker login -u $dockeruser -p $dockerpass
+                    docker image tag blog-app-backend2 $dockeruser/blog-app-backend2:${VERSION}
+                    docker image tag blog-app-backend2 $dockeruser/blog-app-backend2:latest
+                    docker push $dockeruser/blog-app-backend2:${VERSION}
+                    docker push $dockeruser/blog-app-backend2:latest
+                    '''
+                    }
                 }
             }
         }
     }
 }
-    }
-    post{
-        success{
-            archiveArtifacts artifacts: '**/target/*.jar', followSymlinks: false
-            echo "Build and deployment successful!"
-        }
-        failure{
-            echo "Pipeline failed. Check logs for details."
-        }
-    }
+    
+    
+}
 }
