@@ -134,7 +134,7 @@ pipeline {
         stage('Tag and Release') {
             steps {
                 script{
-                    withCredentials([string(credentialsId: 'my-secret-token', variable: 'GITHUB_TOKEN')]) {
+                    withCredentials([string(credentialsId: 'github', variable: 'GITHUB_TOKEN')]) {
                     sh '''#!/bin/bash
                         # Configure git
                         git config --global user.email "jenkins@example.com"
