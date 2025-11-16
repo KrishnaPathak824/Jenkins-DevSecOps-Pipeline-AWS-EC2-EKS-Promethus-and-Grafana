@@ -124,7 +124,7 @@ pipeline {
                             echo "No changes detected, keeping version: $NEXT_VERSION"
                         fi
                         
-                        echo "VERSION=$NEXT_VERSION" > version.txt
+                        echo "$NEXT_VERSION" > version.txt
                         cat version.txt
                     '''
                 }
@@ -140,7 +140,7 @@ pipeline {
                         git config --global user.email "jenkins@example.com"
                         git config --global user.name "Jenkins CI"
                             
-                        VERSION=$(grep VERSION version.txt | cut -d'=' -f2)
+                        VERSION=$(cat version.txt)
                             
                         # Set git remote with credentials
                         git remote set-url origin https://KrishnaPathak824:${GITHUB_TOKEN}@github.com/KrishnaPathak824/Jenkins-DevSecOps-Pipeline-AWS-EC2-EKS-Promethus-and-Grafana.git
@@ -161,34 +161,33 @@ pipeline {
         }
 
         stage("Push to DockerHub") {
-            parallel{
-                stage('Frontend Push') {
-                    steps {
-                        script{
-                            VERSION = readFile('version.txt').trim().split('=')[1]
-                            dockerTagAndPush('blog-app-frontend', VERSION)
-                        }
-                    }
-                }
-                stage('Backend1 Push') {
-                    steps {
-                        script{
-                            VERSION = readFile('version.txt').trim().split('=')[1]
-                            dockerTagAndPush('blog-app-backend1', VERSION)
-                        }
-                    }
-                }      
-                stage('Backend2 Push') {
-                    steps {
-                        script{
-                            VERSION = readFile('version.txt').trim().split('=')[1]
-                            dockerTagAndPush('blog-app-backend2', VERSION)
-                        }
-                    }
+    parallel{
+        stage('Frontend Push') {
+            steps {
+                script{
+                    def VERSION = readFile('version.txt').trim()
+                    dockerTagAndPush('blog-app-frontend', VERSION)
                 }
             }
-        }  
-        
+        }
+        stage('Backend1 Push') {
+            steps {
+                script{
+                    def VERSION = readFile('version.txt').trim()
+                    dockerTagAndPush('blog-app-backend1', VERSION)
+                }
+            }
+        }
+        stage('Backend2 Push') {
+            steps {
+                script{
+                    def VERSION = readFile('version.txt').trim()
+                    dockerTagAndPush('blog-app-backend2', VERSION)
+                }
+            }
+        }
+    }
+}
     }
     post{
         success{
