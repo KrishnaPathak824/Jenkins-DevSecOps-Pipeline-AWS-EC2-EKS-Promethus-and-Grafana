@@ -8,7 +8,6 @@ pipeline {
 
     environment {
         SONAR_HOME = tool name: 'Sonarqube'
-        GITHUB_TOKEN = credentials('github')
     }
 
     stages {
@@ -113,10 +112,12 @@ pipeline {
         stage('Generate Release Version') {
             steps {
                 script {
-                    // Run semantic-release to calculate the version and update version.txt
-                    sh '''
-                        npx semantic-release --no-ci
-                    '''
+                    withCredentials([string(credentialsId: 'github', variable: 'GH_TOKEN')]) {
+                        sh '''
+                            export GH_TOKEN=$GH_TOKEN
+                            npx semantic-release --no-ci --verbose
+                        '''
+                    }
                 }
             }
         }
