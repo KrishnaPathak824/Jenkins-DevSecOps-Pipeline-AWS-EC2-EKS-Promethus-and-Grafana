@@ -10,7 +10,7 @@ spec:
   tls:
     - hosts:
         - krishna-app.com
-      secretName: self-signed-tls
+      secretName: krishna-app-tls
   rules:
     - host: krishna-app.com
       http:
