@@ -9,11 +9,13 @@ import { errorHandler } from './middlewares/errorHandler';
 import { ClerkExpressWithAuth } from '@clerk/clerk-sdk-node';
 import { requestLogger } from './middlewares/requestLogger';
 
+
 dotenv.config();
 
 const corsOptions = {
     origin: process.env.CLIENT_URL || 'http://localhost:3000',
     optionsSuccessStatus: 200,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     credentials: true,
 };
 
