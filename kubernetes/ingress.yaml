@@ -3,14 +3,14 @@ kind: Ingress
 metadata:
   name: myingress
   namespace: dev
-  annotations:
-    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+  # annotations:
+  #   nginx.ingress.kubernetes.io/ssl-redirect: "true"
 spec:
   ingressClassName: nginx
-  tls:
-    - hosts:
-        - krishna-app.com
-      secretName: self-signed-tls
+  # tls:
+  #   - hosts:
+  #       - krishna-app.com
+  #     secretName: self-signed-tls
   rules:
     - host: krishna-app.com
       http:
