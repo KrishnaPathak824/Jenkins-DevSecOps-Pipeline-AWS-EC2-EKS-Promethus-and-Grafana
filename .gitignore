@@ -5,6 +5,5 @@
 terraform-key
 terraform-key.pub
 node_modules/
-.env
 terraform.tfstate.*
 package-lock.json
