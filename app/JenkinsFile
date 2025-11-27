@@ -260,13 +260,13 @@ pipeline {
             steps {
                 script{
                     withCredentials([usernamePassword('credentialsId':"docker-cred",passwordVariable:"dockerpass",usernameVariable:"dockeruser")]){
-                    sh '''
+                    sh """
                     docker login -u $dockeruser -p $dockerpass
                     docker image tag blog-app-frontend $dockeruser/blog-app-frontend:${env.VERSION}
                     docker image tag blog-app-frontend $dockeruser/blog-app-frontend:latest
                     docker push $dockeruser/blog-app-frontend:${env.VERSION}
                     docker push $dockeruser/blog-app-frontend:latest
-                    '''
+                    """
                     }
                 }
             }
@@ -275,13 +275,13 @@ pipeline {
             steps {
                 script{
                     withCredentials([usernamePassword('credentialsId':"docker-cred",passwordVariable:"dockerpass",usernameVariable:"dockeruser")]){
-                    sh '''
+                    sh """
                     docker login -u $dockeruser -p $dockerpass
                     docker image tag blog-app-backend1 $dockeruser/blog-app-backend1:${env.VERSION}
                     docker image tag blog-app-backend1 $dockeruser/blog-app-backend1:latest
                     docker push $dockeruser/blog-app-backend1:${env.VERSION}
                     docker push $dockeruser/blog-app-backend1:latest
-                    '''
+                    """
                     }
                 }
             }
@@ -290,13 +290,13 @@ pipeline {
             steps {
                 script{
                     withCredentials([usernamePassword('credentialsId':"docker-cred",passwordVariable:"dockerpass",usernameVariable:"dockeruser")]){
-                    sh '''
+                    sh """
                     docker login -u $dockeruser -p $dockerpass
                     docker image tag blog-app-backend2 $dockeruser/blog-app-backend2:${env.VERSION}
                     docker image tag blog-app-backend2 $dockeruser/blog-app-backend2:latest
                     docker push $dockeruser/blog-app-backend2:${env.VERSION}
                     docker push $dockeruser/blog-app-backend2:latest
-                    '''
+                    """
                     }
                 }
             }
