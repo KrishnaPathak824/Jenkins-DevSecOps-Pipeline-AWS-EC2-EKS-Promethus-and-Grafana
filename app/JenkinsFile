@@ -8,6 +8,7 @@ pipeline {
 
     environment {
         SONAR_HOME = tool name: 'Sonarqube'
+        VERSION_FILE = 'VERSION'
     }
 
     stages {
@@ -25,11 +26,15 @@ pipeline {
             }
         }
 
-        stage('Setup Semantic Release') {
+        stage('Setup Semver Tool') {
             steps {
-                script{
+                script {
+                    // Install semver tool if not available
                     sh '''
-                        npm install -g semantic-release @semantic-release/changelog @semantic-release/git
+                        if ! command -v semver &> /dev/null; then
+                            echo "Installing semver tool..."
+                            npm install -g semver
+                        fi
                     '''
                 }
             }
@@ -109,63 +114,154 @@ pipeline {
             }
         }
 
-        stage('Generate Release Version') {
+        // stage('Generate Release Version') {
+        //     steps {
+        //         script {
+        //             withCredentials([string(credentialsId: 'github', variable: 'GH_TOKEN')]) {
+        //                 sh '''
+        //                     export GH_TOKEN=$GH_TOKEN
+        //                     npx semantic-release --no-ci --verbose
+        //                 '''
+        //             }
+        //         }
+        //     }
+        // }
+
+        stage('Get Current Version') {
             steps {
                 script {
-                    withCredentials([string(credentialsId: 'github', variable: 'GH_TOKEN')]) {
-                        sh '''
-                            export GH_TOKEN=$GH_TOKEN
-                            npx semantic-release --no-ci --verbose
-                        '''
+                    // Read current version from VERSION file or git tag
+                    if (fileExists(env.VERSION_FILE)) {
+                        env.CURRENT_VERSION = readFile(env.VERSION_FILE).trim()
+                    } else {
+                        // Get latest git tag or default to 0.0.0
+                        env.CURRENT_VERSION = sh(
+                            script: 'git describe --tags --abbrev=0 2>/dev/null || echo "0.0.0"',
+                            returnStdout: true
+                        ).trim()
                     }
+                    echo "Current version: ${env.CURRENT_VERSION}"
                 }
             }
         }
 
-        stage('Tag and Release') {
+        stage('Determine Version Bump') {
             steps {
                 script {
-                    withCredentials([string(credentialsId: 'github', variable: 'GITHUB_TOKEN')]) {
-                        sh '''#!/bin/bash
-                            # Configure git
-                            git config --global user.email "jenkins@example.com"
-                            git config --global user.name "Jenkins CI"
+                    // Determine version bump based on commit message or branch
+                    def commitMessage = sh(
+                        script: 'git log -1 --pretty=%B',
+                        returnStdout: true
+                    ).trim()
+                    
+                    if (commitMessage =~ /(?i)BREAKING CHANGE|major:/) {
+                        env.BUMP_TYPE = 'major'
+                    } else if (commitMessage =~ /(?i)feat:|feature:/) {
+                        env.BUMP_TYPE = 'minor'
+                    } else if (commitMessage =~ /(?i)fix:|bugfix:|patch:/) {
+                        env.BUMP_TYPE = 'patch'
+                    } else {
+                        // Default to patch for regular commits
+                        env.BUMP_TYPE = 'patch'
+                    }
+                    
+                    echo "Bump type determined: ${env.BUMP_TYPE}"
+                }
+            }
+        }
+        
+        stage('Calculate New Version') {
+            steps {
+                script {
+                    // Use semver to bump version
+                    env.NEW_VERSION = sh(
+                        script: "semver -i ${env.BUMP_TYPE} ${env.CURRENT_VERSION}",
+                        returnStdout: true
+                    ).trim()
+                    
+                    // Add pre-release suffix if not on main/master branch
+                    if (env.BRANCH_NAME != 'main' && env.BRANCH_NAME != 'master') {
+                        def preRelease = env.BRANCH_NAME.replaceAll(/[^a-zA-Z0-9]/, '-')
+                        env.NEW_VERSION = sh(
+                            script: "semver ${env.NEW_VERSION} -i prerelease --preid ${preRelease}",
+                            returnStdout: true
+                        ).trim()
+                    }
+                    
+                    echo "New version: ${env.NEW_VERSION}"
+                }
+            }
+        }
+        
+        stage('Update Version File') {
+            steps {
+                script {
+                    // Write new version to VERSION file
+                    writeFile file: env.VERSION_FILE, text: env.NEW_VERSION
+                    echo "Updated ${env.VERSION_FILE} with version ${env.NEW_VERSION}"
+                }
+            }
+        }
+        
+        stage('Tag and Push') {
+            steps {
+                script {
+                    // Create git tag and push
+                    sh """
+                        git config user.email "jenkins@ci.local"
+                        git config user.name "Jenkins CI"
+                        git add ${env.VERSION_FILE}
+                        git commit -m "Bump version to ${env.NEW_VERSION} [skip ci]" || true
+                        git tag -a v${env.NEW_VERSION} -m "Release version ${env.NEW_VERSION}"
+                        git push origin v${env.NEW_VERSION}
+                        git push origin main
+                    """
+                }
+            }
+        }
+
+        // stage('Tag and Release') {
+        //     steps {
+        //         script {
+        //             withCredentials([string(credentialsId: 'github', variable: 'GITHUB_TOKEN')]) {
+        //                 sh '''#!/bin/bash
+        //                     # Configure git
+        //                     git config --global user.email "jenkins@example.com"
+        //                     git config --global user.name "Jenkins CI"
                             
-                            # Get the version generated by semantic-release
-                           VERSION=$(npx semantic-release --dry-run 2>&1 | grep -oP '(?<=The next release version is )[0-9]+\\.[0-9]+\\.[0-9]+' || echo "0.0.0")
-                           echo "v${VERSION}" > version.txt
-                           cat version.txt
+        //                     # Get the version generated by semantic-release
+        //                    VERSION=$(npx semantic-release --dry-run 2>&1 | grep -oP '(?<=The next release version is )[0-9]+\\.[0-9]+\\.[0-9]+' || echo "0.0.0")
+        //                    echo "v${VERSION}" > version.txt
+        //                    cat version.txt
 
-                            # Set git remote with credentials
-                            git remote set-url origin https://KrishnaPathak824:${GITHUB_TOKEN}@github.com/KrishnaPathak824/Jenkins-DevSecOps-Pipeline-AWS-EC2-EKS-Promethus-and-Grafana.git
+        //                     # Set git remote with credentials
+        //                     git remote set-url origin https://KrishnaPathak824:${GITHUB_TOKEN}@github.com/KrishnaPathak824/Jenkins-DevSecOps-Pipeline-AWS-EC2-EKS-Promethus-and-Grafana.git
 
-                            # Check if new version was created
-                            if ! git rev-parse "v${VERSION}" >/dev/null 2>&1; then
-                                echo "Creating tag v${VERSION}"
-                                git tag -a "v${VERSION}" -m "Release v${VERSION}" || echo "Tag already exists"
-                                git push origin "v${VERSION}" || echo "Push failed"
-                            else
-                                echo "Tag v${VERSION} already exists"
-                            fi
-                        '''
-                    }
-                }
-            }
-        }
+        //                     # Check if new version was created
+        //                     if ! git rev-parse "v${VERSION}" >/dev/null 2>&1; then
+        //                         echo "Creating tag v${VERSION}"
+        //                         git tag -a "v${VERSION}" -m "Release v${VERSION}" || echo "Tag already exists"
+        //                         git push origin "v${VERSION}" || echo "Push failed"
+        //                     else
+        //                         echo "Tag v${VERSION} already exists"
+        //                     fi
+        //                 '''
+        //             }
+        //         }
+        //     }
+        // }
 
         stage("Push to DockerHub") {
     parallel{
         stage('Frontend Push') {
             steps {
                 script{
-                    def VERSION = readFile('version.txt').trim()
                     withCredentials([usernamePassword('credentialsId':"docker-cred",passwordVariable:"dockerpass",usernameVariable:"dockeruser")]){
                     sh '''
-                    export VERSION=''' + VERSION + '''
                     docker login -u $dockeruser -p $dockerpass
-                    docker image tag blog-app-frontend $dockeruser/blog-app-frontend:${VERSION}
+                    docker image tag blog-app-frontend $dockeruser/blog-app-frontend:${env.VERSION}
                     docker image tag blog-app-frontend $dockeruser/blog-app-frontend:latest
-                    docker push $dockeruser/blog-app-frontend:$VERSION
+                    docker push $dockeruser/blog-app-frontend:${env.VERSION}
                     docker push $dockeruser/blog-app-frontend:latest
                     '''
                     }
@@ -175,14 +271,12 @@ pipeline {
         stage('Backend1 Push') {
             steps {
                 script{
-                    def VERSION = readFile('version.txt').trim()
                     withCredentials([usernamePassword('credentialsId':"docker-cred",passwordVariable:"dockerpass",usernameVariable:"dockeruser")]){
                     sh '''
-                    export VERSION=''' + VERSION + '''
                     docker login -u $dockeruser -p $dockerpass
-                    docker image tag blog-app-backend1 $dockeruser/blog-app-backend1:${VERSION}
+                    docker image tag blog-app-backend1 $dockeruser/blog-app-backend1:${env.VERSION}
                     docker image tag blog-app-backend1 $dockeruser/blog-app-backend1:latest
-                    docker push $dockeruser/blog-app-backend1:$VERSION
+                    docker push $dockeruser/blog-app-backend1:${env.VERSION}
                     docker push $dockeruser/blog-app-backend1:latest
                     '''
                     }
@@ -192,14 +286,12 @@ pipeline {
         stage('Backend2 Push') {
             steps {
                 script{
-                    def VERSION = readFile('version.txt').trim()
                     withCredentials([usernamePassword('credentialsId':"docker-cred",passwordVariable:"dockerpass",usernameVariable:"dockeruser")]){
                     sh '''
-                    export VERSION=''' + VERSION + '''
                     docker login -u $dockeruser -p $dockerpass
-                    docker image tag blog-app-backend2 $dockeruser/blog-app-backend2:${VERSION}
+                    docker image tag blog-app-backend2 $dockeruser/blog-app-backend2:${env.VERSION}
                     docker image tag blog-app-backend2 $dockeruser/blog-app-backend2:latest
-                    docker push $dockeruser/blog-app-backend2:$VERSION
+                    docker push $dockeruser/blog-app-backend2:${env.VERSION}
                     docker push $dockeruser/blog-app-backend2:latest
                     '''
                     }
