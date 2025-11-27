@@ -12,7 +12,7 @@ data:
   PORT: "3000"
   DB_CLIENT: pg
   NODE_ENV: local
-  CLIENT_URL: http://krishna-app.com
+  CLIENT_URL: https://krishna-app.com
 
 ---
 apiVersion: v1
