@@ -180,7 +180,7 @@ pipeline {
                     ).trim()
                     
                     // Add pre-release suffix if not on main/master branch
-                    if (env.BRANCH_NAME != 'main' && env.BRANCH_NAME != 'master') {
+                    if (env.BRANCH_NAME && env.BRANCH_NAME != 'main' && env.BRANCH_NAME != 'master') {
                         def preRelease = env.BRANCH_NAME.replaceAll(/[^a-zA-Z0-9]/, '-')
                         env.NEW_VERSION = sh(
                             script: "semver ${env.NEW_VERSION} -i prerelease --preid ${preRelease}",
