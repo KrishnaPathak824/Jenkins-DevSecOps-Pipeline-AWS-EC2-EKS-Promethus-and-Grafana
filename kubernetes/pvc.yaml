@@ -1,12 +1,11 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: postgres-pvc
-  namespace: dev
+  name: auto-ebs-claim
 spec:
   accessModes:
     - ReadWriteOnce
+  storageClassName: auto-ebs-sc
   resources:
     requests:
-      storage: 10Gi
-  storageClassName: auto-ebs-sc
+      storage: 8Gi
