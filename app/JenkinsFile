@@ -12,36 +12,26 @@ pipeline {
     }
 
     stages {
-        stage('Check for Changes') {
+        stage('Check Skip CI') {
             steps {
                 script {
-                    checkout scm
-
-                    // Get changed files in last commit
-                    def changedFiles = sh(
-                        script: 'git diff --name-only HEAD~1 HEAD || git log --name-only --pretty=format: -1',
+                    def commitMsg = sh(
+                        script: 'git log -1 --pretty=%B',
                         returnStdout: true
                     ).trim()
 
-                    echo "Changed files:\n${changedFiles}"
+                    echo "Commit message: ${commitMsg}"
 
-                    // Check if any changes are in app/ directory
-                    def appChanges = sh(
-                        script: 'git diff --name-only HEAD~1 HEAD | grep "^app/" || true',
-                        returnStdout: true
-                    ).trim()
-
-                    if (!appChanges) {
-                        echo '⏭️ No changes in app/ directory - skipping build'
+                    if (commitMsg =~ /(?i)\[skip ci\]|\[ci skip\]/) {
+                        echo '⏭️ [skip ci] detected - stopping pipeline'
                         currentBuild.result = 'NOT_BUILT'
-                        error('No app changes detected - stopping pipeline')
-                    } else {
-                        echo '✅ Changes detected in app/ directory - proceeding with build'
-                        echo "Changed app files:\n${appChanges}"
+                        currentBuild.description = 'Skipped due to [skip ci]'
+                        error('Build skipped by commit message')
                     }
                 }
             }
         }
+
         stage('Workspace CleanUp') {
             steps {
                 cleanWs()
