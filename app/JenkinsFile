@@ -306,4 +306,13 @@ pipeline {
     
     
 }
+    post{
+        success {
+            archiveArtifacts artifacts: '*.xml', followSymlinks: false
+            build-job: 'ArgoCD-Deployments' ,parameters: [
+                string(name: 'VERSION', value: "${env.NEW_VERSION}")
+            ]
+        }
+
+    }
 }
