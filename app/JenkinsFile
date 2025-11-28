@@ -338,13 +338,13 @@ pipeline {
                     steps {
                         script {
                             withCredentials([usernamePassword('credentialsId':'docker-cred', passwordVariable:'dockerpass', usernameVariable:'dockeruser')]) {
-                                sh '''
+                                sh """
                     docker login -u $dockeruser -p $dockerpass
                     docker image tag blog-app-frontend $dockeruser/blog-app-frontend:v${env.NEW_VERSION}
                     docker image tag blog-app-frontend $dockeruser/blog-app-frontend:latest
                     docker push $dockeruser/blog-app-frontend:v${env.NEW_VERSION}
                     docker push $dockeruser/blog-app-frontend:latest
-                    '''
+                    """
                             }
                         }
                     }
@@ -353,13 +353,13 @@ pipeline {
                     steps {
                         script {
                             withCredentials([usernamePassword('credentialsId':'docker-cred', passwordVariable:'dockerpass', usernameVariable:'dockeruser')]) {
-                                sh '''
+                                sh """
                     docker login -u $dockeruser -p $dockerpass
                     docker image tag blog-app-backend1 $dockeruser/blog-app-backend1:v${env.NEW_VERSION}
                     docker image tag blog-app-backend1 $dockeruser/blog-app-backend1:latest
                     docker push $dockeruser/blog-app-backend1:v${env.NEW_VERSION}
                     docker push $dockeruser/blog-app-backend1:latest
-                    '''
+                    """
                             }
                         }
                     }
