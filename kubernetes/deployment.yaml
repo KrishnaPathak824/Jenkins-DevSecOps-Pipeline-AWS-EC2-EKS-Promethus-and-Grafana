@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: backend1
-          image: jhinga/blog-app-backend1:v0.0.6
+          image: jhinga/blog-app-backend1:v0.0.8
           ports:
             - containerPort: 3000
           imagePullPolicy: Always
@@ -42,7 +42,7 @@ spec:
     spec:
       containers:
         - name: backend2
-          image: jhinga/blog-app-backend2:v0.0.6
+          image: jhinga/blog-app-backend2:v0.0.8
           ports:
             - containerPort: 3001
           imagePullPolicy: Always
@@ -69,7 +69,7 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: jhinga/blog-app-frontend:v0.0.6
+          image: jhinga/blog-app-frontend:v0.0.8
           ports:
             - containerPort: 80
           imagePullPolicy: Always
