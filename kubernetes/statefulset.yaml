@@ -28,4 +28,4 @@ spec:
       volumes:
         - name: postgres-storage
           persistentVolumeClaim:
-            claimName: auto-ebs-claim
+            claimName: postgres-pvc
