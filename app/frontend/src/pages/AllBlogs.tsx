@@ -56,7 +56,7 @@ const AllBlogs: React.FC = () => {
                 )}
                 {blogs.length === 0 && !loading && (
                     <Paper sx={{ p: 4, textAlign: "center" }}>
-                        <Typography variant="h6">No blogs found.</Typography>
+                        <Typography variant="h6">No blogs available</Typography>
                     </Paper>
                 )}
                 <Stack
