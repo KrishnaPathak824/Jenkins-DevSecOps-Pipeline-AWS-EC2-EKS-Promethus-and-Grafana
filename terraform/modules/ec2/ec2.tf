@@ -203,6 +203,20 @@ resource "aws_iam_policy" "ec2_eks_access_policy" {
                     "sts:GetCallerIdentity"
                 ]
                 Resource = "*"
+            },
+            {
+                Effect = "Allow",
+                Action = [
+                    "ec2:DescribeVolumes",
+                    "ec2:DescribeVolumeStatus",
+                    "ec2:CreateVolume",
+                    "ec2:DeleteVolume",
+                    "ec2:AttachVolume",
+                    "ec2:ModifyVolume",
+                    "ec2:CreateSnapshot",
+                    "ec2:DeleteSnapshot"
+              ],
+                Resource = "*"
             }
         ]
     })
