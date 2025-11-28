@@ -286,7 +286,7 @@ pipeline {
                 script {
                     // Create git tag and push
                     withCredentials([string(credentialsId: 'github', variable: 'GITHUB_TOKEN')]) {
-                        sh '''
+                        sh """
                         git remote set-url origin https://KrishnaPathak824:${GITHUB_TOKEN}@github.com/KrishnaPathak824/Jenkins-DevSecOps-Pipeline-AWS-EC2-EKS-Promethus-and-Grafana.git
                         git config user.email "jenkins@ci.local"
                         git config user.name "Jenkins CI"
@@ -295,7 +295,7 @@ pipeline {
                         git tag -a v${env.NEW_VERSION} -m "Release version ${env.NEW_VERSION}"
                         git push origin v${env.NEW_VERSION}
                         git push origin main
-                    '''
+                    """
                     }
                 }
             }
