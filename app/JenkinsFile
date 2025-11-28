@@ -12,6 +12,36 @@ pipeline {
     }
 
     stages {
+        stage('Check for Changes') {
+            steps {
+                script {
+                    checkout scm
+
+                    // Get changed files in last commit
+                    def changedFiles = sh(
+                        script: 'git diff --name-only HEAD~1 HEAD || git log --name-only --pretty=format: -1',
+                        returnStdout: true
+                    ).trim()
+
+                    echo "Changed files:\n${changedFiles}"
+
+                    // Check if any changes are in app/ directory
+                    def appChanges = sh(
+                        script: 'git diff --name-only HEAD~1 HEAD | grep "^app/" || true',
+                        returnStdout: true
+                    ).trim()
+
+                    if (!appChanges) {
+                        echo '⏭️ No changes in app/ directory - skipping build'
+                        currentBuild.result = 'NOT_BUILT'
+                        error('No app changes detected - stopping pipeline')
+                    } else {
+                        echo '✅ Changes detected in app/ directory - proceeding with build'
+                        echo "Changed app files:\n${appChanges}"
+                    }
+                }
+            }
+        }
         stage('Workspace CleanUp') {
             steps {
                 cleanWs()
@@ -144,7 +174,57 @@ pipeline {
             }
         }
 
+        // stage('Determine Version Bump') {
+        //     steps {
+        //         script {
+        //             // Determine version bump based on commit message or branch
+        //             def commitMessage = sh(
+        //                 script: 'git log -1 --pretty=%B',
+        //                 returnStdout: true
+        //             ).trim()
+
+        //             if (commitMessage =~ /(?i)BREAKING CHANGE|major:/) {
+        //                 env.BUMP_TYPE = 'major'
+        //             } else if (commitMessage =~ /(?i)feat:|feature:/) {
+        //                 env.BUMP_TYPE = 'minor'
+        //             } else if (commitMessage =~ /(?i)fix:|bugfix:|patch:/) {
+        //                 env.BUMP_TYPE = 'patch'
+        //             } else {
+        //                 // Default to patch for regular commits
+        //                 env.BUMP_TYPE = 'patch'
+        //             }
+
+        //             echo "Bump type determined: ${env.BUMP_TYPE}"
+        //         }
+        //     }
+        // }
+        stage('Check if Version Bump Needed') {
+            steps {
+                script {
+                    // Get the latest commit message
+                    def commitMessage = sh(
+                        script: 'git log -1 --pretty=%B',
+                        returnStdout: true
+                    ).trim()
+
+                    echo "Commit message: ${commitMessage}"
+
+                    // Check if commit contains [skip ci] or [ci skip] or is a version bump commit
+                    if (commitMessage =~ /(?i)\[skip ci\]|\[ci skip\]|Bump version to/) {
+                        env.SKIP_VERSION_BUMP = 'true'
+                        echo '⏭️ Skipping version bump - commit contains skip directive or is a version bump commit'
+                    } else {
+                        env.SKIP_VERSION_BUMP = 'false'
+                        echo '✅ Version bump will be performed'
+                    }
+                }
+            }
+        }
+
         stage('Determine Version Bump') {
+            when {
+                expression { env.SKIP_VERSION_BUMP == 'false' }
+            }
             steps {
                 script {
                     // Determine version bump based on commit message or branch
@@ -153,18 +233,27 @@ pipeline {
                         returnStdout: true
                     ).trim()
 
+                    echo "Analyzing commit message: '${commitMessage}'"
+
+                    // Check for version bump type in commit message
                     if (commitMessage =~ /(?i)BREAKING CHANGE|major:/) {
                         env.BUMP_TYPE = 'major'
+                        echo '✓ Matched BREAKING CHANGE or major:'
                     } else if (commitMessage =~ /(?i)feat:|feature:/) {
                         env.BUMP_TYPE = 'minor'
+                        echo '✓ Matched feat: or feature:'
                     } else if (commitMessage =~ /(?i)fix:|bugfix:|patch:/) {
                         env.BUMP_TYPE = 'patch'
+                        echo '✓ Matched fix:, bugfix:, or patch:'
                     } else {
                         // Default to patch for regular commits
                         env.BUMP_TYPE = 'patch'
+                        echo '⚠ No conventional commit pattern found, defaulting to patch'
                     }
 
+                    echo '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━'
                     echo "Bump type determined: ${env.BUMP_TYPE}"
+                    echo '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━'
                 }
             }
         }
@@ -207,7 +296,7 @@ pipeline {
                 script {
                     // Create git tag and push
                     withCredentials([string(credentialsId: 'github', variable: 'GITHUB_TOKEN')]) {
-                        sh """
+                        sh '''
                         git remote set-url origin https://KrishnaPathak824:${GITHUB_TOKEN}@github.com/KrishnaPathak824/Jenkins-DevSecOps-Pipeline-AWS-EC2-EKS-Promethus-and-Grafana.git
                         git config user.email "jenkins@ci.local"
                         git config user.name "Jenkins CI"
@@ -216,7 +305,7 @@ pipeline {
                         git tag -a v${env.NEW_VERSION} -m "Release version ${env.NEW_VERSION}"
                         git push origin v${env.NEW_VERSION}
                         git push origin main
-                    """
+                    '''
                     }
                 }
             }
@@ -259,13 +348,13 @@ pipeline {
                     steps {
                         script {
                             withCredentials([usernamePassword('credentialsId':'docker-cred', passwordVariable:'dockerpass', usernameVariable:'dockeruser')]) {
-                                sh """
+                                sh '''
                     docker login -u $dockeruser -p $dockerpass
                     docker image tag blog-app-frontend $dockeruser/blog-app-frontend:v${env.NEW_VERSION}
                     docker image tag blog-app-frontend $dockeruser/blog-app-frontend:latest
                     docker push $dockeruser/blog-app-frontend:v${env.NEW_VERSION}
                     docker push $dockeruser/blog-app-frontend:latest
-                    """
+                    '''
                             }
                         }
                     }
@@ -274,13 +363,13 @@ pipeline {
                     steps {
                         script {
                             withCredentials([usernamePassword('credentialsId':'docker-cred', passwordVariable:'dockerpass', usernameVariable:'dockeruser')]) {
-                                sh """
+                                sh '''
                     docker login -u $dockeruser -p $dockerpass
                     docker image tag blog-app-backend1 $dockeruser/blog-app-backend1:v${env.NEW_VERSION}
                     docker image tag blog-app-backend1 $dockeruser/blog-app-backend1:latest
                     docker push $dockeruser/blog-app-backend1:v${env.NEW_VERSION}
                     docker push $dockeruser/blog-app-backend1:latest
-                    """
+                    '''
                             }
                         }
                     }

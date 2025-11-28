@@ -57,7 +57,7 @@ pipeline {
                     git config user.email "jenkins@ci.local"
                     git config user.name "Jenkins CI"
                     git add kubernetes/deployment.yaml
-                    git commit -m "Update Kubernetes manifests for version ${params.VERSION}[skip ci]" || echo "No changes to commit"
+                    git commit -m "Update Kubernetes manifests for version ${params.VERSION} [skip ci]" || echo "No changes to commit"
                     git push origin main
                     """
                 }
