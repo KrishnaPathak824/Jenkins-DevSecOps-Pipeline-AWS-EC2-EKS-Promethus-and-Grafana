@@ -11,7 +11,7 @@ pipeline {
             steps {
                 cleanWs()
             }
-        }   
+        }
         stage('Set Version') {
             steps {
                 script {
@@ -21,32 +21,31 @@ pipeline {
         }
         stage('Code Checkout') {
             steps {
-                script{
-                    clone("https://github.com/KrishnaPathak824/Jenkins-DevSecOps-Pipeline-AWS-EC2-EKS-Promethus-and-Grafana.git","main")
+                script {
+                    clone('https://github.com/KrishnaPathak824/Jenkins-DevSecOps-Pipeline-AWS-EC2-EKS-Promethus-and-Grafana.git', 'main')
                 }
             }
         }
-        stage("Update: Kubernetes manifests"){
-            steps{
-                script{
-                    dir('kubernetes'){
+        stage('Update: Kubernetes manifests') {
+            steps {
+                script {
+                    dir('kubernetes') {
                         sh """
                             sed -i -e s/blog-app-frontend.*/blog-app-frontend:v${params.VERSION}/g deployment.yaml
                         """
                     }
-                    
-                    dir('kubernetes'){
+
+                    dir('kubernetes') {
                         sh """
                             sed -i -e s/blog-app-backend1.*/blog-app-backend1:v${params.VERSION}/g deployment.yaml
                         """
                     }
-                    
-                    dir('kubernetes'){
+
+                    dir('kubernetes') {
                         sh """
                             sed -i -e s/blog-app-backend2.*/blog-app-backend2:v${params.VERSION}/g deployment.yaml
                         """
                     }
-                    
                 }
             }
         }
@@ -57,7 +56,7 @@ pipeline {
                     git remote set-url origin https://KrishnaPathak824:${GITHUB_TOKEN}@github.com/KrishnaPathak824/Jenkins-DevSecOps-Pipeline-AWS-EC2-EKS-Promethus-and-Grafana.git
                     git config user.email "jenkins@ci.local"
                     git config user.name "Jenkins CI"
-                    git add deployment.yaml
+                    git add kubernetes/deployment.yaml
                     git commit -m "Update Kubernetes manifests for version ${params.VERSION}[skip ci]" || echo "No changes to commit"
                     git push origin main
                     """
@@ -65,7 +64,7 @@ pipeline {
             }
         }
     }
-    post{
+    post {
         always {
             cleanWs()
         }
