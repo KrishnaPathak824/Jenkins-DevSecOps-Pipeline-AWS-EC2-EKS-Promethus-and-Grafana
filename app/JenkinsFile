@@ -3,7 +3,7 @@ pipeline {
     agent any
 
     tools {
-    nodejs 'Nodejs'
+        nodejs 'Nodejs'
     }
 
     environment {
@@ -17,11 +17,11 @@ pipeline {
                 cleanWs()
             }
         }
-    
+
         stage('Cloning the repo') {
             steps {
-                script{
-                    clone("https://github.com/KrishnaPathak824/Jenkins-DevSecOps-Pipeline-AWS-EC2-EKS-Promethus-and-Grafana.git","main")
+                script {
+                    clone('https://github.com/KrishnaPathak824/Jenkins-DevSecOps-Pipeline-AWS-EC2-EKS-Promethus-and-Grafana.git', 'main')
                 }
             }
         }
@@ -42,7 +42,7 @@ pipeline {
 
         stage('Trivy Filesystem Scan') {
             steps {
-                script{
+                script {
                     trivy()
                 }
             }
@@ -50,31 +50,30 @@ pipeline {
 
         stage('Install Dependencies') {
             steps {
-                dir('app/frontend'){
-                    script{
+                dir('app/frontend') {
+                    script {
                         sh '''
                         npm install -g yarn
                         yarn install --frozen-lockfile
                         '''
                     }
                 }
-                dir('app/backend1'){
-                    script{
+                dir('app/backend1') {
+                    script {
                         sh 'yarn install --frozen-lockfile'
                     }
                 }
-                dir('app/backend2'){
-                    script{
+                dir('app/backend2') {
+                    script {
                         sh 'yarn install --frozen-lockfile'
                     }
                 }
-                
             }
         }
 
         stage('Owasp: Dependency Check') {
             steps {
-                script{
+                script {
                     owaspDependencyCheck()
                 }
             }
@@ -82,32 +81,32 @@ pipeline {
 
         stage('SonarQube Code Analysis Scan') {
             steps {
-                script{
-                    sonarqube("Sonarqube","blog-app","blog-app")
+                script {
+                    sonarqube('Sonarqube', 'blog-app', 'blog-app')
                 }
             }
         }
 
         stage('image-build') {
-            parallel{
+            parallel {
                 stage('Frontend Image Build') {
                     steps {
-                        script{
-                            dockerBuild('app/frontend','blog-app-frontend')
+                        script {
+                            dockerBuild('app/frontend', 'blog-app-frontend')
                         }
                     }
                 }
                 stage('Backend1 Image Build') {
                     steps {
-                        script{
-                            dockerBuild('app/backend1','blog-app-backend1')
+                        script {
+                            dockerBuild('app/backend1', 'blog-app-backend1')
                         }
                     }
                 }
                 stage('Backend2 Image Build') {
                     steps {
-                        script{
-                            dockerBuild('app/backend2','blog-app-backend2')
+                        script {
+                            dockerBuild('app/backend2', 'blog-app-backend2')
                         }
                     }
                 }
@@ -153,7 +152,7 @@ pipeline {
                         script: 'git log -1 --pretty=%B',
                         returnStdout: true
                     ).trim()
-                    
+
                     if (commitMessage =~ /(?i)BREAKING CHANGE|major:/) {
                         env.BUMP_TYPE = 'major'
                     } else if (commitMessage =~ /(?i)feat:|feature:/) {
@@ -164,12 +163,12 @@ pipeline {
                         // Default to patch for regular commits
                         env.BUMP_TYPE = 'patch'
                     }
-                    
+
                     echo "Bump type determined: ${env.BUMP_TYPE}"
                 }
             }
         }
-        
+
         stage('Calculate New Version') {
             steps {
                 script {
@@ -178,7 +177,7 @@ pipeline {
                         script: "semver -i ${env.BUMP_TYPE} ${env.CURRENT_VERSION}",
                         returnStdout: true
                     ).trim()
-                    
+
                     // Add pre-release suffix if not on main/master branch
                     if (env.BRANCH_NAME && env.BRANCH_NAME != 'main' && env.BRANCH_NAME != 'master') {
                         def preRelease = env.BRANCH_NAME.replaceAll(/[^a-zA-Z0-9]/, '-')
@@ -187,12 +186,12 @@ pipeline {
                             returnStdout: true
                         ).trim()
                     }
-                    
+
                     echo "New version: ${env.NEW_VERSION}"
                 }
             }
         }
-        
+
         stage('Update Version File') {
             steps {
                 script {
@@ -202,13 +201,13 @@ pipeline {
                 }
             }
         }
-        
+
         stage('Tag and Push') {
             steps {
                 script {
                     // Create git tag and push
                     withCredentials([string(credentialsId: 'github', variable: 'GITHUB_TOKEN')]) {
-                    sh """
+                        sh """
                         git remote set-url origin https://KrishnaPathak824:${GITHUB_TOKEN}@github.com/KrishnaPathak824/Jenkins-DevSecOps-Pipeline-AWS-EC2-EKS-Promethus-and-Grafana.git
                         git config user.email "jenkins@ci.local"
                         git config user.name "Jenkins CI"
@@ -231,7 +230,7 @@ pipeline {
         //                     # Configure git
         //                     git config --global user.email "jenkins@example.com"
         //                     git config --global user.name "Jenkins CI"
-                            
+
         //                     # Get the version generated by semantic-release
         //                    VERSION=$(npx semantic-release --dry-run 2>&1 | grep -oP '(?<=The next release version is )[0-9]+\\.[0-9]+\\.[0-9]+' || echo "0.0.0")
         //                    echo "v${VERSION}" > version.txt
@@ -254,65 +253,62 @@ pipeline {
         //     }
         // }
 
-        stage("Push to DockerHub") {
-    parallel{
-        stage('Frontend Push') {
-            steps {
-                script{
-                    withCredentials([usernamePassword('credentialsId':"docker-cred",passwordVariable:"dockerpass",usernameVariable:"dockeruser")]){
-                    sh """
+        stage('Push to DockerHub') {
+            parallel {
+                stage('Frontend Push') {
+                    steps {
+                        script {
+                            withCredentials([usernamePassword('credentialsId':'docker-cred', passwordVariable:'dockerpass', usernameVariable:'dockeruser')]) {
+                                sh """
                     docker login -u $dockeruser -p $dockerpass
                     docker image tag blog-app-frontend $dockeruser/blog-app-frontend:v${env.NEW_VERSION}
                     docker image tag blog-app-frontend $dockeruser/blog-app-frontend:latest
                     docker push $dockeruser/blog-app-frontend:v${env.NEW_VERSION}
                     docker push $dockeruser/blog-app-frontend:latest
                     """
+                            }
+                        }
                     }
                 }
-            }
-        }
-        stage('Backend1 Push') {
-            steps {
-                script{
-                    withCredentials([usernamePassword('credentialsId':"docker-cred",passwordVariable:"dockerpass",usernameVariable:"dockeruser")]){
-                    sh """
+                stage('Backend1 Push') {
+                    steps {
+                        script {
+                            withCredentials([usernamePassword('credentialsId':'docker-cred', passwordVariable:'dockerpass', usernameVariable:'dockeruser')]) {
+                                sh """
                     docker login -u $dockeruser -p $dockerpass
                     docker image tag blog-app-backend1 $dockeruser/blog-app-backend1:v${env.NEW_VERSION}
                     docker image tag blog-app-backend1 $dockeruser/blog-app-backend1:latest
                     docker push $dockeruser/blog-app-backend1:v${env.NEW_VERSION}
                     docker push $dockeruser/blog-app-backend1:latest
                     """
+                            }
+                        }
                     }
                 }
-            }
-        }
-        stage('Backend2 Push') {
-            steps {
-                script{
-                    withCredentials([usernamePassword('credentialsId':"docker-cred",passwordVariable:"dockerpass",usernameVariable:"dockeruser")]){
-                    sh """
+                stage('Backend2 Push') {
+                    steps {
+                        script {
+                            withCredentials([usernamePassword('credentialsId':'docker-cred', passwordVariable:'dockerpass', usernameVariable:'dockeruser')]) {
+                                sh """
                     docker login -u $dockeruser -p $dockerpass
                     docker image tag blog-app-backend2 $dockeruser/blog-app-backend2:v${env.NEW_VERSION}
                     docker image tag blog-app-backend2 $dockeruser/blog-app-backend2:latest
                     docker push $dockeruser/blog-app-backend2:v${env.NEW_VERSION}
                     docker push $dockeruser/blog-app-backend2:latest
                     """
+                            }
+                        }
                     }
                 }
             }
         }
     }
-}
-    
-    
-}
-    post{
+    post {
         success {
             archiveArtifacts artifacts: '*.xml', followSymlinks: false
-            build-job: 'ArgoCD-Deployments' ,parameters: [
+            build job: 'ArgoCD-Deployments' ,parameters: [
                 string(name: 'VERSION', value: "${env.NEW_VERSION}")
             ]
         }
-
     }
 }
